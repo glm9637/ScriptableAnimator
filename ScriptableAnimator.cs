@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using UnityEditor.Animations;
 using System;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(Animator))]
 public class AnimationEditor : Editor
@@ -106,14 +107,38 @@ public class {parameterClass} {{
     private string generateParameter(Animator animator)
     {
         var text = new StringBuilder();
-
+        var hashes = new Dictionary<string, AnimatorControllerParameter>();
+        var knownHashes = new List<string>();
         foreach (var parameter in animator.parameters)
         {
+            var current = parameter.nameHash.ToString();
+            if (hashes.ContainsKey(current))
+            {
+                var previous = hashes[current];
+                hashes.Remove(current);
+                hashes.Add(name, previous);
+                knownHashes.Add(current);
+                hashes.Add(parameter.name, parameter);
 
+            }
+            else if (knownHashes.Contains(current))
+            {
+                hashes.Add(parameter.name, parameter);
+            }
+            else
+            {
+                hashes.Add(current, parameter);
+            }
+        }
+
+        foreach (var hash in hashes)
+        {
+            var parameter = hash.Value;
+            var isHash = hash.Key != parameter.name;
             if (parameter.type == AnimatorControllerParameterType.Trigger)
             {
                 text.AppendLine("   public void set" + parameter.name + "() {");
-                text.AppendLine("       animator.SetTrigger(\"" + parameter.name + "\");");
+                text.AppendLine("       animator.SetTrigger(" + (isHash ? "" : "\"") + hash.Key + (isHash ? "" : "\"") + ");");
                 text.AppendLine("   }");
             }
             else
@@ -121,10 +146,10 @@ public class {parameterClass} {{
                 var parameterType = parameter.type.ToString().ToLower();
                 text.AppendLine("   public " + parameterType + " " + parameter.name + "{");
                 text.AppendLine("       get {");
-                text.AppendLine("           return animator.Get" + parameter.type.ToString() + "(\"" + parameter.name + "\");");
+                text.AppendLine("           return animator.Get" + parameter.type.ToString() + "(" + (isHash ? "" : "\"") + hash.Key + (isHash ? "" : "\"") + ");");
                 text.AppendLine("       }");
                 text.AppendLine("       set {");
-                text.AppendLine("           animator.Set" + parameter.type.ToString() + "(\"" + parameter.name + "\", value);");
+                text.AppendLine("           animator.Set" + parameter.type.ToString() + "("+ (isHash ? "" : "\"") + hash.Key + (isHash ? "" : "\"")+", value);");
                 text.AppendLine("       }");
                 text.AppendLine("   }");
             }
