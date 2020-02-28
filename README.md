@@ -13,6 +13,8 @@ Generate a Unity script which allows you to access your Animator values without 
 
 Store a Reference in the Script you wan't to use the Animator
 ```
+using IG.Generated.gAnimator;
+...
 private PlayerAnimator animator;
 
   private void Awake()
