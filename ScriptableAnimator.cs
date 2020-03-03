@@ -73,15 +73,15 @@ public class {name} : MonoBehaviour
 
     private Animator animator;
     private static {name} instance;
-        private {parameterClass} parameter;
-        public {parameterClass} Parameter {{ get {{ return parameter; }} }}
+    public {parameterClass} Parameter {{get; private set;}}
     {generateLayerList(animator)}
 
 
     public void Awake() {{
 
         animator = GetComponent<Animator>();
-        parameter = new {parameterClass}(animator);
+        Parameter = new {parameterClass}(animator);
+        {generateInitLayers(animator)}
     }}
 
 }}
@@ -164,7 +164,18 @@ public class {parameterClass} {{
         for (var i = 0; i < animator.layerCount; i++)
         {
             var name = secureName(animator.GetLayerName(i));
-            text.AppendLine($"public {name}Layer {name} {{ get; }}");
+            text.AppendLine($"public {name}Layer {name} {{ get; private set;}}");
+        }
+        return text.ToString();
+    }
+
+    private string generateInitLayers(Animator animator)
+    {
+        var text = new StringBuilder();
+        for (var i = 0; i < animator.layerCount; i++)
+        {
+            var name = secureName(animator.GetLayerName(i));
+            text.AppendLine($"{name} = new {name}Layer(animator);");
         }
         return text.ToString();
     }
